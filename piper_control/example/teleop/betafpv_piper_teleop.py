@@ -406,6 +406,7 @@ def main() -> int:
         import rclpy
         from rcl_interfaces.msg import ParameterType
         from rcl_interfaces.srv import GetParameters
+        from rclpy.qos import QoSProfile, ReliabilityPolicy
         from sensor_msgs.msg import Joy
     except ImportError as exc:
         raise SystemExit(
@@ -425,9 +426,10 @@ def main() -> int:
 
     rclpy.init()
     node = rclpy.create_node("betafpv_piper_teleop")
+    joy_qos = QoSProfile(depth=10, reliability=ReliabilityPolicy.BEST_EFFORT)
     # Keep the subscription alive for the full process lifetime.
     joy_subscription = node.create_subscription(
-        Joy, args.joy_topic, joy_callback, 10
+        Joy, args.joy_topic, joy_callback, joy_qos
     )
     sdk_mode_service = f"{args.sdk_mode_node.rstrip('/')}/get_parameters"
     sdk_mode_client = node.create_client(GetParameters, sdk_mode_service)
@@ -469,6 +471,7 @@ def main() -> int:
             sdk_state["future"] = sdk_mode_client.call_async(request)
             sdk_state["next_query_at"] = now + 0.2
 
+    print(f"[JOY QoS] BEST_EFFORT；脚本={Path(__file__).resolve()}")
     print(
         f"持续等待 {args.joy_topic} ({args.input_format}) 的有效 Joy 消息，且 "
         f"{args.sdk_mode_node}.use_sdk=true；Ctrl+C 退出..."

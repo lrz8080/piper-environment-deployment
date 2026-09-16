@@ -1,0 +1,22 @@
+[Unit]
+Description=D1 Piper joy control
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+Type=simple
+User=robot
+Group=robot
+WorkingDirectory=/home/robot/piper-environment-deployment
+Environment=PYTHONUNBUFFERED=1
+ExecStartPre=+/usr/sbin/ip link set can1 down
+ExecStartPre=+/usr/sbin/ip link set can1 type can bitrate 1000000
+ExecStartPre=+/usr/sbin/ip link set can1 up
+ExecStart=/bin/bash -c "source /opt/d1_ros2/env.sh && /home/robot/piper-environment-deployment/start_piper_teleop.sh"
+Restart=on-failure
+RestartSec=10
+KillSignal=SIGINT
+TimeoutStopSec=20
+
+[Install]
+WantedBy=multi-user.target
